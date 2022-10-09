@@ -1,0 +1,3 @@
+## Comando para compilar códigos em c ##
+
+cc -Wall -O2 source_files... -o executable_name -lm
