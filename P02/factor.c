@@ -9,7 +9,7 @@
 
 int factor(int n,int *prime_factors,int *multiplicity)
 {
-  int d,n_factors;
+  int64_t d,n_factors;
 
   n_factors = 0;
   //

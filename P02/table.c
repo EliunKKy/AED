@@ -16,10 +16,11 @@ void do_it(int N)
   int i;
   FILE *table = fopen("table.txt", "w+");
 
-  fprintf(table, " angle         cos               sin\n");
-  fprintf(table, "-------      --------          -------\n");
+  fprintf(table, " Angle(degrees)         Cosine                Sine\n");
+  fprintf(table, "----------------       --------             --------\n");
   for(i = 0;i <= N;i++)
-    fprintf(table, "%4d %15f %17f\n",i,cos((double)i),sin((double)i));
+
+    fprintf(table, "%7d %23f %20f\n",i,cos((double) i * (M_PI / 180)),sin((double) i * (M_PI / 180)));
 
   fclose(table);
 }
