@@ -7,9 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int factor(int n,int *prime_factors,int *multiplicity)
+int factor(unsigned int n,unsigned int *prime_factors,unsigned int *multiplicity)
 {
-  int d,n_factors;
+  unsigned int d,n_factors;
 
   n_factors = 0;
   //
@@ -53,21 +53,23 @@ int factor(int n,int *prime_factors,int *multiplicity)
 
 int main( int argc,char **argv)
 {
-  int i,j,n,nf,f[16],m[16]; // the product of the first 16 primes is larger than 2^64
-  
-  for(i = 1 ; i < argc ; i++)
+  unsigned int i,j,n,nf,f[16],m[16]; // the product of the first 16 primes is larger than 2^64 
+  unsigned int argc2 = (unsigned int)argc;
+
+  for(i = 1 ; i < argc2 ; i++)
     if((n = atoi(argv[i])) > 1)
     {
       nf = factor(n,f,m);
-      printf("%d = ",n);
+      printf("%u = ",n);
 
       for(j = 0 ; j < nf ; j++)
         if(m[j] == 1)
-          printf("%s%d",(j == 0) ? "" : "*",f[j]);
+          printf("%s%u",(j == 0) ? "" : "*",f[j]);
         else
-          printf("%s%d^%d",(j == 0) ? "" : "*",f[j],m[j]);
+          printf("%s%u^%u",(j == 0) ? "" : "*",f[j],m[j]);
 
       printf(" (%s)\n",(nf == 1 && m[0] == 1) ? "prime" : "composite");
     }
   return 0;
 }
+
