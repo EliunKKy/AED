@@ -86,7 +86,7 @@ std::ostream & operator << (std::ostream &os,person &p)
 int main(void)
 {
   person p = person("John Doe","no address"); // create a new object and then copy it to p
-  person q("no name","no address");           // create a new object (no copy needed)
+  person q("Tobias Ord","Mafamude, Vila NOva de Gaia");           // create a new object (no copy needed)
 
   cout << "Before change of address: " << p.get_name() << ", " << p.get_address() << endl;
   p.set_address("bench 24, Central Park, New York");

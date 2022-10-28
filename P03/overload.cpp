@@ -29,11 +29,45 @@ void show(const char *s,const char *h = "string: ") // second argument with defa
        << std::endl;
 }
 
+void show(const char c)
+{
+  cout << "char: "
+       << c
+       << std::endl;
+}
+
+void show(const int array[])
+{
+  cout << "array: [";
+  
+  for (int el = 0; el < 3; el++){
+    if(el != 2)
+    {
+      cout << array[el] 
+           << ", ";
+    } 
+    else
+    {
+      cout << array[el] 
+           << "]" 
+           << std::endl;
+    }
+    
+  }
+
+  
+
+       
+}
+
 int main(void)
 {
   show(1.0);
   show("hello");
   show(-3);
   show("John","name: ");
+  show('a');
+  int a[3] = {2, 5, 39};
+  show(a);
   return 0;
 }
