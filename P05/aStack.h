@@ -6,6 +6,7 @@
 
 #ifndef _AED_aStack_
 #define _AED_aStack_
+#define BOUND 10 // constant incremente of the stack
 
 #include <cassert>
 
@@ -19,7 +20,7 @@ class aStack
   public:
     aStack(int n = 100)
     {
-      assert(n >= 10 && n <= 1000000);
+      //assert(n >= 10 && n <= 1000000);
       max_size = n;
       cur_size = 0;
       data = new T[n];
@@ -31,13 +32,25 @@ class aStack
       cur_size = 0;
       data = nullptr;
     }
+    int* increment(void)
+    {
+      int* new_stack = new int[max_size + BOUND];
+ 
+      // copying the content of old stack
+      for (int i = 0; i < max_size; i++)
+          new_stack[i] = data[i];
+  
+      // re-sizing the length
+      max_size += BOUND;
+      return new_stack;
+    }
     void clear(void)
     {
       cur_size = 0;
     }
     int size(void) const
     {
-      return cur_size;
+      return max_size;
     }
     int is_full(void) const
     {
@@ -54,6 +67,11 @@ class aStack
     }
     void push(T &v)
     {
+        // if stack is full, create new one
+      if (cur_size == max_size - 1)
+          data = increment();
+  
+      // insert element at top of the stack
       assert(cur_size < max_size);
       data[cur_size++] = v;
     }

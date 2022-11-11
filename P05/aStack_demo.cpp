@@ -39,6 +39,7 @@ int check_parenthesis(const char *s)
       flag = 1;
     }
   }
+  printf("%d", st.size());
 
   // final conditioning
   if(flag == 0)
