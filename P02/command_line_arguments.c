@@ -8,7 +8,12 @@
 
 int main(int argc,char *argv[argc])
 {
-  for(int i = 0;i < argc;i++)
-    printf("argv[%2d] = \"%s\"\n",i,argv[i]);
+  char *remaining;
+  long n;
+  for(int i = 0;i < argc;i++){
+    n = strtol(argv[i], &remaining, 10);
+    printf("argv[%2d] = %ld\"%s\"\n", i, n,remaining);
+  }
+    
   return 0;
 }
