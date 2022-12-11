@@ -17,7 +17,7 @@
 //#define PROFREC
 //#define FASTWAY
 //#define PROFREC2
-#define DYNAPR
+//#define DYNAPR
 //
 // static configuration
 //
@@ -73,7 +73,7 @@ solution_t;
 
 
 //
-// the (very inefficient) recursive solution given to the students
+// a better aproach for professor's solution
 //
 
 static solution_t solution_1,solution_1_best;
@@ -81,16 +81,25 @@ static double solution_1_elapsed_time; // time it took to solve the problem
 static unsigned long solution_1_count; // effort dispended solving the problem
 
 
-static void solution_1_recursion(int move_number,int position,int speed,int final_position)
+static void solution_1_recursion(int move_number, int position, int speed, int final_position)
 {
   int i,new_speed;
 
   // record move
   solution_1_count++;
   solution_1.positions[move_number] = position;
-  // is it a solution?
-  if(position == final_position && speed == 1)
+
+
+  if(solution_1_best.positions[move_number] > solution_1.positions[move_number])
   {
+    return;
+  }
+  
+  // is it a solution?
+  if(position == final_position - 1 && speed <= 2)
+  {
+     move_number++;
+     solution_1.positions[move_number]=position + 1;
     // is it a better solution?
     if(move_number < solution_1_best.n_moves)
     {
@@ -100,11 +109,10 @@ static void solution_1_recursion(int move_number,int position,int speed,int fina
     return;
   }
   // no, try all legal speeds
-  for(new_speed = speed - 1;new_speed <= speed + 1;new_speed++)
+  for(new_speed = speed + 1;new_speed >= speed - 1;new_speed--)
     if(new_speed >= 1 && new_speed <= _max_road_speed_ && position + new_speed <= final_position)
     {
-      for(i = 0;i <= new_speed && new_speed <= max_road_speed[position + i];i++)
-        ;
+      for(i = 0;i <= new_speed && new_speed <= max_road_speed[position + i];i++);
       if(i > new_speed)
         solution_1_recursion(move_number + 1,position + new_speed,new_speed,final_position);
     }
@@ -135,10 +143,11 @@ static solution_t solution_2,solution_2_best;
 static double solution_2_elapsed_time; // time it took to solve the problem
 static unsigned long solution_2_count; // effort dispended solving the problem
 
-static void solve_2_recursion(int move_number,int position,int speed,int final_position)
+static void solve_2_fast(int move_number,int position,int speed,int final_position)
 {
   solution_2_count++;  // increment counter per check
   solution_2.positions[move_number] = position;
+
   if(position == final_position && speed == 1)
   {
     solution_2_best = solution_2;
@@ -153,7 +162,7 @@ static void solve_2_recursion(int move_number,int position,int speed,int final_p
       {
         continue;
       } 
-      int speedchecker = position;
+      int next = position;
       int possibleMove = 1;
       if (newspeed > _max_road_speed_)
       {
@@ -170,8 +179,8 @@ static void solve_2_recursion(int move_number,int position,int speed,int final_p
           maxspeed = _min_road_speed_;
         }
         for(int k = 0; k < newspeed-j; k++){
-          speedchecker++; // speedchecker will be used as the index to access the array of the road
-          if(max_road_speed[speedchecker] < maxspeed || speedchecker > final_position)
+          next++; // next will be used as the index to access the array of the road
+          if(max_road_speed[next] < maxspeed || next > final_position)
           {
             possibleMove = 0;
             break;
@@ -179,15 +188,12 @@ static void solve_2_recursion(int move_number,int position,int speed,int final_p
         }
       }
       if (possibleMove == 1){
-        solve_2_recursion(move_number+1, position+newspeed, newspeed, final_position);
+        solve_2_fast(move_number+1, position+newspeed, newspeed, final_position);
         return;
       } 
     }
   }
 }
-
-
-
 
 static void solve_2(int final_position)
 {
@@ -200,48 +206,84 @@ static void solve_2(int final_position)
   solution_2_elapsed_time = cpu_time();
   solution_2_count = 0ul;
   solution_2_best.n_moves = final_position + 100;
-  solve_2_recursion(0,0,0,final_position);  
+  solve_2_fast(0,0,0,final_position);  
   solution_2_elapsed_time = cpu_time() - solution_2_elapsed_time;
 
 }
 
-// professor algorithm but better
 
-static solution_t solution_3,solution_3_best;
+static solution_t solution_3, solution_3_best, solution_3_before; //solution_3_before is used to save the previous solution
 static double solution_3_elapsed_time; // time it took to solve the problem
 static unsigned long solution_3_count; // effort dispended solving the problem
+static int last_speed = 0, last_position = 0;
+static int save_sol = 0,saved = 0;
 
-static void solution_3_recursion(int move_number,int position,int speed,int final_position)
+static void solve_3_dyn(int move_number,int position,int speed,int final_position)
 {
-  int i,new_speed;
-
-  // record move
-  solution_3_count++;
+  
+  solution_3_count++;  // increment counter per check
   solution_3.positions[move_number] = position;
-  // is it a solution?
   if(position == final_position && speed == 1)
   {
-    // is it a better solution?
-    if(move_number < solution_3_best.n_moves)
-    {
-      solution_3_best = solution_3;
-      solution_3_best.n_moves = move_number;
-    }
+    solution_3_best = solution_3;
+    solution_3_best.n_moves = move_number;
     return;
-  }
-  // no, try all legal speeds
-  if (solution_3_best.positions[move_number] > position)
-  {
-    return;
-  }
-    for(new_speed = speed + 1;new_speed >= speed - 1;new_speed--)
-    if(new_speed >= 1 && new_speed <= _max_road_speed_ && position + new_speed <= final_position)
-    {
-      for(i = 0;i <= new_speed && new_speed <= max_road_speed[position + i];i++)
-        ;
-      if(i > new_speed)
-        solution_3_recursion(move_number + 1,position + new_speed,new_speed,final_position);
+  } else {
+    for(int newspeed = speed + 1; newspeed >= speed-1 ; newspeed--)
+    {      
+      if (max_road_speed[position] < newspeed)
+      {
+        continue;
+      }
+      if (newspeed > _max_road_speed_)
+      {
+        continue;
+      }  
+
+      int next = position; // this will be used to check the next index
+      int possibleMove = 1;
+      
+      // Check if the next newspeed*(newspeed+1)/2 indexes are above speed limit  
+      for(int j = 0; j <= newspeed; j++){
+        if (possibleMove == 0)
+        { 
+          break;          
+        }
+        int maxspeed = newspeed - j; // calculate max speed to check for the next maxspeed tiles  
+        if (maxspeed < _min_road_speed_){
+          maxspeed = _min_road_speed_;
+        }  
+        for(int k = 0; k < newspeed-j; k++){
+          next++; 
+          if (next > final_position && final_position > 1)
+          {
+            save_sol = 1;
+          }  
+          if(max_road_speed[next] < maxspeed || next > final_position)
+          {
+            possibleMove = 0;
+          }
+          
+        }
+      }
+
+      if (save_sol == 1 && saved == 0) // condition used to save latest solution (memoization)
+      { 
+        saved = 1;
+        for (int i = 0; i <= final_position; i++)
+        {
+          solution_3_before.positions[i] = i < move_number ? solution_3.positions[i] : 0;
+        }
+        solution_3_before.n_moves = move_number-1; 
+        last_position = solution_3_before.positions[move_number-1];
+        last_speed = solution_3_before.positions[move_number-1]-solution_3_before.positions[move_number-2];
+      }
+      if (possibleMove == 1){
+        solve_3_dyn(move_number+1, position+newspeed, newspeed, final_position);
+        return;
+      } 
     }
+  }
 }
 
 static void solve_3(int final_position)
@@ -254,104 +296,16 @@ static void solve_3(int final_position)
   solution_3_elapsed_time = cpu_time();
   solution_3_count = 0ul;
   solution_3_best.n_moves = final_position + 100;
-  solution_3_recursion(0,0,0,final_position);
+  solution_3.n_moves = solution_3_before.n_moves;
+  for (int i = 0; i <= final_position; i++) // pass the last solution to the current one
+  {
+    solution_3.positions[i] = solution_3_before.positions[i];
+  }
+  save_sol = 0; // flag used to save the current solution
+  saved = 0; // flag used to identify a saving point
+  solve_3_dyn(solution_3_before.n_moves,last_position,last_speed,final_position);
   solution_3_elapsed_time = cpu_time() - solution_3_elapsed_time;
 }
-
-static solution_t solution_4, solution_4_best, solution_4_before;
-static double solution_4_elapsed_time; // time it took to solve the problem
-static unsigned long solution_4_count; // effort dispended solving the problem
-static int last_speed = 0, last_position = 0;
-static int saveArr = 0,saved = 0;
-
-static void solve_4_dyn(int move_number,int position,int speed,int final_position)
-{
-  
-  solution_4_count++;  // increment counter per check
-  solution_4.positions[move_number] = position;
-  if(position == final_position && speed == 1)
-  {
-    solution_4_best = solution_4;
-    solution_4_best.n_moves = move_number;
-    return;
-  } else {
-    for(int newspeed = speed + 1; newspeed >= speed-1 ; newspeed--)
-    {      
-      if (max_road_speed[position] < newspeed)
-      {
-        continue;
-      }
-      int speedchecker = position;
-      int possibleMove = 1;
-      if (newspeed > _max_road_speed_)
-      {
-        continue;
-      }  
-      // Check if the next newspeed*(newspeed+1)/2 indexes are above speed limit  
-      for(int j = 0; j <= newspeed; j++){
-        if (possibleMove == 0)
-        { 
-          break;          
-        }
-        int maxspeed = newspeed - j; // calculate max speed to check for the next maxspeed tiles  
-        if (maxspeed < _min_road_speed_){
-          maxspeed = _min_road_speed_;
-        }  
-        for(int k = 0; k < newspeed-j; k++){
-          speedchecker++; // speedchecker will be used as the index to access the array of the road
-          if (speedchecker > final_position && final_position > 1)
-          {
-            saveArr = 1;
-          }  
-          if(max_road_speed[speedchecker] < maxspeed || speedchecker > final_position)
-          {
-            possibleMove = 0;
-          }
-          
-        }
-      }
-      if (saveArr == 1 && saved == 0)
-      { 
-        saved = 1;
-        for (int i = 0; i <= final_position; i++)
-        {
-          solution_4_before.positions[i] = i < move_number ? solution_4.positions[i] : 0;
-        }
-        solution_4_before.n_moves = move_number-1; 
-        last_position = solution_4_before.positions[move_number-1];
-        last_speed = solution_4_before.positions[move_number-1]-solution_4_before.positions[move_number-2];
-      }
-      if (possibleMove == 1){
-        solve_4_dyn(move_number+1, position+newspeed, newspeed, final_position);
-        return;
-      } 
-    }
-  }
-}
-
-static void solve_4(int final_position)
-{
-  if(final_position < 1 || final_position > _max_road_size_)
-  {
-    fprintf(stderr,"solve_4: bad final_position\n");
-    exit(1);
-  }
-  solution_4_elapsed_time = cpu_time();
-  solution_4_count = 0ul;
-  solution_4_best.n_moves = final_position + 100;
-  solution_4.n_moves = solution_4_before.n_moves;
-  for (int i = 0; i <= final_position; i++)
-  {
-    solution_4.positions[i] = solution_4_before.positions[i];
-  }
-  saveArr = 0;
-  saved = 0;
-  solve_4_dyn(solution_4_before.n_moves,last_position,last_speed,final_position);
-  solution_4_elapsed_time = cpu_time() - solution_4_elapsed_time;
-}
-//
-// main program
-//
 
 //
 // example of the slides
@@ -376,11 +330,14 @@ static void example(void)
   printf("\n");
 }
 
+//
+// main program
+//
 
 int main(int argc,char *argv[argc + 1])
 {
 # define _time_limit_  3600.0
-  int n_mec,final_position,print_this_one;
+  int n_mec,final_position,print_this_one, x;
   char file_name[64];
 
   // generate the example data
@@ -396,67 +353,122 @@ int main(int argc,char *argv[argc + 1])
   // run all solution methods for all interesting sizes of the problem
   final_position = 1;
   solution_1_elapsed_time = 0.0;
+  
+
+  printf("Chose the type of solution: \n");
+  printf("1 - plain recursion \n");
+  printf("2 - student's solution \n");
+  printf("3 - dynamic programming (memoization) \n");
+  scanf("%d", &x);
+  printf("---------------------------------------");
+
+  printf("\n");
+
   printf("    + --- ---------------- --------- +\n");
   printf("    |                plain recursion |\n");
   printf("--- + --- ---------------- --------- +\n");
   printf("  n | sol            count  cpu time |\n");
   printf("--- + --- ---------------- --------- +\n");
-  while(final_position <= _max_road_size_/* && final_position <= 20*/)
+
+
+  //switch case to choose the type of solution
+  switch (x)
   {
-    
-    print_this_one = (final_position == 10 || final_position == 20 || final_position == 50 || final_position == 100 || final_position == 200 || final_position == 400 || final_position == 800) ? 1 : 0;
-    printf("%3d |",final_position);
-    // first solution method (very bad)
-    #ifdef PROFREC
-    if(solution_1_elapsed_time < _time_limit_)
+  case 1:
+    while(final_position <= _max_road_size_/* && final_position <= 20*/)
     {
-      solve_1(final_position);
-      if(print_this_one != 0)
+      print_this_one = (final_position == 10 || final_position == 20 || final_position == 50 || final_position == 100 || final_position == 200 || final_position == 400 || final_position == 800) ? 1 : 0;
+      printf("%3d |",final_position);
+      // first solution method (very bad)
+      if(solution_1_elapsed_time < _time_limit_)
       {
-        sprintf(file_name,"%03d_1_%s.pdf",final_position,argv[1]);
-        make_custom_pdf_file(file_name,final_position,&max_road_speed[0],solution_1_best.n_moves,&solution_1_best.positions[0],solution_1_elapsed_time,solution_1_count,"Plain recursion");
+        solve_1(final_position);
+        if(print_this_one != 0)
+        {
+          sprintf(file_name,"%03d_1.pdf",final_position);
+          make_custom_pdf_file(file_name,final_position,&max_road_speed[0],solution_1_best.n_moves,&solution_1_best.positions[0],solution_1_elapsed_time,solution_1_count,"Plain recursion");
+        }
+        printf(" %3d %16lu %9.3e |",solution_1_best.n_moves,solution_1_count,solution_1_elapsed_time);
+        FILE *fp1;
+        char file_name3[64];
+        sprintf(file_name3,"results_1_%s.txt",argv[1]);
+        fp1 = fopen(file_name3, "a");
+        fprintf(fp1, "%d %f\n", final_position, solution_1_elapsed_time);
+        fclose(fp1);
+
       }
-      printf(" %3d %16lu %9.3e |",solution_1_best.n_moves,solution_1_count,solution_1_elapsed_time);
-      FILE *fp1;
-      char file_name1[64];
-      sprintf(file_name1,"results_1_%s.txt",argv[1]);
-      fp1 = fopen(file_name1, "w+");
-      fprintf(fp1, "%d %f\n", final_position, solution_1_elapsed_time);
-      fclose(fp1);
+      else
+      {
+        solution_1_best.n_moves = -1;
+        printf("                                |");
+      }
+      
+      
+      // done
+      printf("\n");
+      fflush(stdout);
+      // new final_position
+      if(final_position < 50)
+        final_position += 1;
+      else if(final_position < 100)
+        final_position += 5;
+      else if(final_position < 200)
+        final_position += 10;
+      else
+        final_position += 20;
     }
-    else
-    {
-      solution_1_best.n_moves = -1;
-      printf("                                |");
-    }
-    #endif
-    // second solution method (less bad)
-    // ...
-    #ifdef FASTWAY
+  break;
+
+  case 2:
+    while(final_position <= _max_road_size_/* && final_position <= 20*/){
+      // second solution method (less bad)
+      // ...
+      print_this_one = (final_position == 10 || final_position == 20 || final_position == 50 || final_position == 100 || final_position == 200 || final_position == 400 || final_position == 800) ? 1 : 0;
+      printf("%3d |",final_position);
       solve_2(final_position);
       if(print_this_one != 0)
         {
           sprintf(file_name,"%03d_2_%s.pdf",final_position,argv[1]);
-          make_custom_pdf_file(file_name,final_position,&max_road_speed[0],solution_2_best.n_moves,&solution_2_best.positions[0],solution_2_elapsed_time,solution_2_count,"Fastest Way Possible");
+          make_custom_pdf_file(file_name,final_position,&max_road_speed[0],solution_2_best.n_moves,&solution_2_best.positions[0],solution_2_elapsed_time,solution_2_count,"Student's Approach");
+          
         }
         printf(" %3d %16lu %9.3e |",solution_2_best.n_moves,solution_2_count,solution_2_elapsed_time);
+        
         FILE *fp2;
         char file_name2[64];
         sprintf(file_name2,"results_2_%s.txt",argv[1]);
         fp2 = fopen(file_name2, "a");
-        fprintf(fp2, "%d %f\n", final_position, solution_2_elapsed_time);
+        fprintf(fp2, "%d %f %ld\n", final_position, solution_2_elapsed_time, solution_2_count);
         fclose(fp2);
-    #endif
+      
+        // done-
+      printf("\n");
+      fflush(stdout);
+      // new final_position
+      if(final_position < 50)
+        final_position += 1;
+      else if(final_position < 100)
+        final_position += 5;
+      else if(final_position < 200)
+        final_position += 10;
+      else
+        final_position += 20;
+    }
 
-    #ifdef PROFREC2
-        if(solution_3_elapsed_time < _time_limit_)
-    {
+  break;
+
+  case 3:
+    while(final_position <= _max_road_size_/* && final_position <= 20*/){
+      print_this_one = (final_position == 10 || final_position == 20 || final_position == 50 || final_position == 100 || final_position == 200 || final_position == 400 || final_position == 800) ? 1 : 0;
+      printf("%3d |",final_position);
+
       solve_3(final_position);
       if(print_this_one != 0)
-      {
-        sprintf(file_name,"%03d_3_%s.pdf",final_position,argv[1]);
-        make_custom_pdf_file(file_name,final_position,&max_road_speed[0],solution_3_best.n_moves,&solution_3_best.positions[0],solution_3_elapsed_time,solution_3_count,"Plain recursion 2.0");
-      }
+        {
+          sprintf(file_name,"%03d_3_%s.pdf",final_position,argv[1]);
+          make_custom_pdf_file(file_name,final_position,&max_road_speed[0],solution_3_best.n_moves,&solution_3_best.positions[0],solution_3_elapsed_time,solution_3_count,"Dynamic Approach");
+        }
+
       printf(" %3d %16lu %9.3e |",solution_3_best.n_moves,solution_3_count,solution_3_elapsed_time);
       FILE *fp3;
       char file_name3[64];
@@ -464,41 +476,24 @@ int main(int argc,char *argv[argc + 1])
       fp3 = fopen(file_name3, "a");
       fprintf(fp3, "%d %f\n", final_position, solution_3_elapsed_time);
       fclose(fp3);
+
+      // done-
+      printf("\n");
+      fflush(stdout);
+      // new final_position
+      if(final_position < 50)
+        final_position += 1;
+      else if(final_position < 100)
+        final_position += 5;
+      else if(final_position < 200)
+        final_position += 10;
+      else
+        final_position += 20;
     }
-    else
-    {
-      solution_3_best.n_moves = -1;
-      printf("                                |");
-    }
-    #endif
-    #ifdef DYNAPR
-      solve_4(final_position);
-      if(print_this_one != 0)
-        {
-          sprintf(file_name,"%03d_4_%s.pdf",final_position,argv[1]);
-          make_custom_pdf_file(file_name,final_position,&max_road_speed[0],solution_4_best.n_moves,&solution_4_best.positions[0],solution_4_elapsed_time,solution_4_count,"Dynamic Approach");
-        }
-        printf(" %3d %16lu %9.3e |",solution_4_best.n_moves,solution_4_count,solution_4_elapsed_time);
-      FILE *fp4;
-      char file_name4[64];
-      sprintf(file_name4,"results_4_%s.txt",argv[1]);
-      fp4 = fopen(file_name4, "a");
-      fprintf(fp4, "%d %f\n", final_position, solution_4_elapsed_time);
-      fclose(fp4);
-    #endif
-    // done-
-    printf("\n");
-    fflush(stdout);
-    // new final_position
-    if(final_position < 50)
-      final_position += 1;
-    else if(final_position < 100)
-      final_position += 5;
-    else if(final_position < 200)
-      final_position += 10;
-    else
-      final_position += 20;
+     
+  break;
   }
+
   printf("--- + --- ---------------- --------- + --- ---------------- --------- \n");
   return 0;
 # undef _time_limit_

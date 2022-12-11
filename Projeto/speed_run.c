@@ -100,7 +100,7 @@ static void solution_1_recursion(int move_number,int position,int speed,int fina
       for(i = 0;i <= new_speed && new_speed <= max_road_speed[position + i];i++)
         ;
       if(i > new_speed)
-        solution_1_recursion(move_number + 1,position + new_speed,new_speed,final_position);
+        (move_number + 1,position + new_speed,new_speed,final_position);
     }
 }
 
